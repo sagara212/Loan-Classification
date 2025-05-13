@@ -15,7 +15,13 @@ load_dotenv()
 app = FastAPI()
 
 # Static file
-app.mount('/static', StaticFiles(directory='static'), name='static')
+BASE_DIR = os.path.dirname(__file__)
+static_path = os.path.join(BASE_DIR, "static")
+
+if not os.path.exists(static_path):
+    os.makedirs(static_path)  # Opsional: buat folder jika tidak ada
+
+app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 # Global pipeline
 pipeline = None
@@ -23,7 +29,6 @@ pipeline = None
 @app.on_event("startup")
 def load_model():
     global pipeline
-    BASE_DIR = os.path.dirname(__file__)
     model_path = os.getenv("MODEL_PATH", os.path.join(BASE_DIR, "pipeline.pkl"))
 
     if not os.path.isfile(model_path):
@@ -76,7 +81,10 @@ class features(BaseModel):
 # Homepage
 @app.get("/")
 def read_index():
-    return FileResponse('static/index.html')
+    index_path = os.path.join(static_path, "index.html")
+    if not os.path.exists(index_path):
+        raise HTTPException(status_code=404, detail="index.html tidak ditemukan")
+    return FileResponse(index_path)
 
 # Endpoint prediksi
 @app.post("/predict")
