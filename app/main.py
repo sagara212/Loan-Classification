@@ -20,11 +20,11 @@ app.mount('/static', StaticFiles(directory='static'), name='static')
 # Global pipeline
 pipeline = None
 
-# Load pipeline saat startup
 @app.on_event("startup")
 def load_model():
     global pipeline
-    model_path = os.getenv("MODEL_PATH", r"app/pipeline.pkl")
+    BASE_DIR = os.path.dirname(__file__)
+    model_path = os.getenv("MODEL_PATH", os.path.join(BASE_DIR, "pipeline.pkl"))
 
     if not os.path.isfile(model_path):
         logging.error(f"File pipeline tidak ditemukan: {model_path}")
@@ -36,6 +36,7 @@ def load_model():
     except Exception as e:
         logging.error(f"Gagal load pipeline: {e}")
         raise RuntimeError("Gagal memuat pipeline")
+
 
 # Kolom input
 NUMERIC_FEATURES = [

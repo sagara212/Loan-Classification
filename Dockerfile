@@ -1,17 +1,10 @@
-FROM python:3.9-slim
+FROM python:3.9
 
-# Set workdir
 WORKDIR /app
 
-# Copy semua file
-COPY . .
+COPY ./app /app/app
+COPY requirements.txt .
 
-# Pindah ke folder app saat run
-WORKDIR /app/app
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install dependencies
-RUN pip install --no-cache-dir --upgrade pip \
- && pip install --no-cache-dir -r ../requirements.txt
-
-# Jalankan app
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
