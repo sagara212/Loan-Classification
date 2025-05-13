@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loan Approval Prediction</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom, #1e293b, #0f172a);
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: #334155;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      max-width: 700px;
+      width: 100%;
+      overflow: hidden;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card header {
+      background: linear-gradient(to right, #10b981, #059669);
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .card header h1 {
+      font-size: 2rem;
+      font-weight: bold;
+    }
+
+    form {
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-gap: 1rem 2rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #e2e8f0;
+    }
+
+    .form-group input,
+    .form-group select {
+      padding: 0.75rem 1rem;
+      background: #475569;
+      border: 1px solid #64748b;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #f1f5f9;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #22d3ee;
+      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.3);
+    }
+
+    button {
+      grid-column: 1 / -1;
+      padding: 0.85rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #f0fdf4;
+      background: linear-gradient(to right, #16a34a, #15803d);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    button:hover {
+      background: linear-gradient(to right, #15803d, #166534);
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    #result {
+      grid-column: 1 / -1;
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 1.4rem;
+      font-weight: bold;
+      padding: 1rem;
+      border-radius: 8px;
+      transition: all 0.3s ease-in-out;
+    }
+
+    #result.approved {
+      background-color: #16a34a;
+      color: #f0fdf4;
+      box-shadow: 0 4px 10px rgba(22, 163, 74, 0.5);
+    }
+
+    #result.rejected {
+      background-color: #dc2626;
+      color: #fef2f2;
+      box-shadow: 0 4px 10px rgba(220, 38, 38, 0.5);
+    }
+
+    #result.unknown {
+      background-color: #facc15;
+      color: #1e293b;
+      box-shadow: 0 4px 10px rgba(250, 204, 21, 0.5);
+    }
+
+    #loading {
+      display: none;
+      grid-column: 1 / -1;
+      text-align: center;
+      font-size: 1.2rem;
+      color: #94a3b8;
+    }
+
+    @media (max-width: 600px) {
+      form {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Tambahkan gaya untuk tombol Auto-pick */
+    .auto-pick-btn {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: bold;
+      color: #f0fdf4;
+      background: linear-gradient(to right, #3b82f6, #2563eb);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      margin: 0.5rem 0;
+      text-align: center;
+    }
+
+    .auto-pick-btn:hover {
+      background: linear-gradient(to right, #2563eb, #1d4ed8);
+    }
+
+    .auto-pick-btn:active {
+      transform: scale(0.95);
+    }
+
+    .auto-pick-container {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <header>
+      <h1>Loan Approval Predictor</h1>
+    </header>
+    <form id="loanForm">
+      <div class="form-group auto-pick-container">
+        <button type="button" id="autoPick1" class="auto-pick-btn">Auto-pick Data 1</button>
+        <button type="button" id="autoPick2" class="auto-pick-btn">Auto-pick Data 2</button>
+      </div>
+      <div class="form-group">
+        <label for="person_age">Age</label>
+        <input type="number" id="person_age" name="person_age" min="0" required />
+      </div>
+      <div class="form-group">
+        <label for="person_gender">Gender</label>
+        <select id="person_gender" name="person_gender" required>
+          <option value="">Select...</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="person_education">Education</label>
+        <select id="person_education" name="person_education" required>
+          <option value="">Select...</option>
+          <option value="High School">High School</option>
+          <option value="Associate">Associate</option>
+          <option value="Bachelor">Bachelor</option>
+          <option value="Master">Master</option>
+          <option value="Doctorate">Doctorate</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="person_income">Income</label>
+        <input type="number" id="person_income" name="person_income" min="0" step="0.01" required />
+      </div>
+      <div class="form-group">
+        <label for="person_emp_exp">Experience (years)</label>
+        <input type="number" id="person_emp_exp" name="person_emp_exp" min="0" step="1" required />
+      </div>
+      <div class="form-group">
+        <label for="person_home_ownership">Home Ownership</label>
+        <select id="person_home_ownership" name="person_home_ownership" required>
+          <option value="">Select...</option>
+          <option value="RENT">Rent</option>
+          <option value="OWN">Own</option>
+          <option value="MORTGAGE">Mortgage</option>
+          <option value="OTHER">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="loan_amnt">Loan Amount</label>
+        <input type="number" id="loan_amnt" name="loan_amnt" min="0" step="0.01" required />
+      </div>
+      <div class="form-group">
+        <label for="loan_intent">Loan Intent</label>
+        <select id="loan_intent" name="loan_intent" required>
+          <option value="">Select...</option>
+          <option value="PERSONAL">Personal</option>
+          <option value="EDUCATION">Education</option>
+          <option value="MEDICAL">Medical</option>
+          <option value="VENTURE">Venture</option>
+          <option value="HOMEIMPROVEMENT">Home Improvement</option>
+          <option value="DEBTCONSOLIDATION">Debt Consolidation</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="loan_int_rate">Interest Rate (%)</label>
+        <input type="number" id="loan_int_rate" name="loan_int_rate" min="0" step="0.01" required />
+      </div>
+      <div class="form-group">
+        <label for="loan_percent_income">Percent Income (%)</label>
+        <input type="number" id="loan_percent_income" name="loan_percent_income" min="0" step="0.01" required />
+      </div>
+      <div class="form-group">
+        <label for="cb_person_cred_hist_length">Credit History (yrs)</label>
+        <input type="number" id="cb_person_cred_hist_length" name="cb_person_cred_hist_length" min="0" step="1" required />
+      </div>
+      <div class="form-group">
+        <label for="credit_score">Credit Score</label>
+        <input type="number" id="credit_score" name="credit_score" min="0" step="1" required />
+      </div>
+      <div class="form-group">
+        <label for="previous_loan_defaults_on_file">Previous Defaults</label>
+        <select id="previous_loan_defaults_on_file" name="previous_loan_defaults_on_file" required>
+          <option value="">Select...</option>
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
+        </select>
+      </div>
+      <button type="submit">Predict Now</button>
+      <div id="loading">Processing your request...</div>
+      <div id="result"></div>
+    </form>
+  </div>
+  <script>
+    document.getElementById('loanForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+
+      // Convert numeric values
+      data.person_age = parseFloat(data.person_age);
+      data.person_income = parseFloat(data.person_income);
+      data.person_emp_exp = parseFloat(data.person_emp_exp);
+      data.loan_amnt = parseFloat(data.loan_amnt);
+      data.loan_int_rate = parseFloat(data.loan_int_rate);
+      data.loan_percent_income = parseFloat(data.loan_percent_income);
+      data.cb_person_cred_hist_length = parseFloat(data.cb_person_cred_hist_length);
+      data.credit_score = parseFloat(data.credit_score);
+
+      const loadingElement = document.getElementById('loading');
+      const resultElement = document.getElementById('result');
+      loadingElement.style.display = 'block';
+      resultElement.textContent = '';
+      resultElement.className = '';
+
+      try {
+        const response = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+        loadingElement.style.display = 'none';
+
+        if (result.status === 'disetujui') {
+          resultElement.textContent = '✅ Pinjaman Anda Disetujui!';
+          resultElement.classList.add('approved');
+        } else if (result.status === 'ditolak') {
+          resultElement.textContent = '❌ Pinjaman Anda Ditolak.';
+          resultElement.classList.add('rejected');
+        } else {
+          resultElement.textContent = '⚠️ Status tidak dikenal.';
+          resultElement.classList.add('unknown');
+        }
+      } catch (error) {
+        loadingElement.style.display = 'none';
+        resultElement.textContent = '❌ Terjadi kesalahan saat memproses.';
+        resultElement.classList.add('rejected');
+        console.error('Error:', error);
+      }
+    });
+
+    document.getElementById('autoPick1').addEventListener('click', function () {
+      const data1 = {
+        person_age: 26.0,
+        person_gender: 'male',
+        person_education: 'Master',
+        person_income: 130713.0,
+        person_emp_exp: 0,
+        person_home_ownership: 'RENT',
+        loan_amnt: 35000.0,
+        loan_intent: 'EDUCATION',
+        loan_int_rate: 18.39,
+        loan_percent_income: 0.27,
+        cb_person_cred_hist_length: 4.0,
+        credit_score: 708,
+        previous_loan_defaults_on_file: 'No',
+      };
+      fillForm(data1);
+    });
+
+    document.getElementById('autoPick2').addEventListener('click', function () {
+      const data2 = {
+        person_age: 24.0,
+        person_gender: 'female',
+        person_education: 'Bachelor',
+        person_income: 13866.0,
+        person_emp_exp: 0,
+        person_home_ownership: 'OWN',
+        loan_amnt: 1500.0,
+        loan_intent: 'PERSONAL',
+        loan_int_rate: 7.29,
+        loan_percent_income: 0.11,
+        cb_person_cred_hist_length: 3.0,
+        credit_score: 600,
+        previous_loan_defaults_on_file: 'Yes',
+      };
+      fillForm(data2);
+    });
+
+    function fillForm(data) {
+      document.getElementById('person_age').value = data.person_age;
+      document.getElementById('person_gender').value = data.person_gender;
+      document.getElementById('person_education').value = data.person_education;
+      document.getElementById('person_income').value = data.person_income;
+      document.getElementById('person_emp_exp').value = data.person_emp_exp;
+      document.getElementById('person_home_ownership').value = data.person_home_ownership;
+      document.getElementById('loan_amnt').value = data.loan_amnt;
+      document.getElementById('loan_intent').value = data.loan_intent;
+      document.getElementById('loan_int_rate').value = data.loan_int_rate;
+      document.getElementById('loan_percent_income').value = data.loan_percent_income;
+      document.getElementById('cb_person_cred_hist_length').value = data.cb_person_cred_hist_length;
+      document.getElementById('credit_score').value = data.credit_score;
+      document.getElementById('previous_loan_defaults_on_file').value = data.previous_loan_defaults_on_file;
+    }
+  </script>
+</body>
+</html>
