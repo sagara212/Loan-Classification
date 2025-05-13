@@ -1,19 +1,17 @@
 FROM python:3.9-slim
 
-# Set working directory
+# Set workdir
 WORKDIR /app
 
-# Copy only requirements.txt first to leverage Docker layer caching
-COPY requirements.txt /app/
+# Copy semua file
+COPY . .
+
+# Pindah ke folder app saat run
+WORKDIR /app/app
 
 # Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir -r ../requirements.txt
 
-# Copy the rest of the application code
-COPY . /app
-
-# Expose the application port
-EXPOSE 8000
-
-# Command to run the application
+# Jalankan app
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -24,7 +24,7 @@ pipeline = None
 @app.on_event("startup")
 def load_model():
     global pipeline
-    model_path = os.getenv("MODEL_PATH", r"D:\DOCUMENT\INFORMATIKA\FULL PROJEK\Github\Deployment\Loan_Classification\pipeline.pkl")
+    model_path = os.getenv("MODEL_PATH", r"app/pipeline.pkl")
 
     if not os.path.isfile(model_path):
         logging.error(f"File pipeline tidak ditemukan: {model_path}")
