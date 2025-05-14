@@ -1,5 +1,5 @@
 # Use the Python image
-FROM python:3.10-slim
+FROM python:3.9-slim
 
 # Install system dependencies required for lightgbm
 RUN apt-get update && apt-get install -y libgomp1
@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Copy the requirements file and install dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt
 
 # Copy the source code
 COPY . .
