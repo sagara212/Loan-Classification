@@ -7,3 +7,5 @@ python-dotenv
 scikit-learn==1.4.2
 lightgbm
 pytest
+httpx
+
